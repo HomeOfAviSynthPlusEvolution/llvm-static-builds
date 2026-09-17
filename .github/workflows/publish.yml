@@ -1,0 +1,69 @@
+name: Publish verified LLVM SDKs
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Successful Build static LLVM SDKs run on master (no rebuild)
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: llvm-static-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Validate selected build
+        id: build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SDK_RUN_ID: ${{ inputs.run_id }}
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess
+          run_id = os.environ['SDK_RUN_ID']
+          if not run_id.isdecimal():
+              raise SystemExit('run_id must be a numeric Actions run ID')
+          repo = os.environ['GH_REPO']
+          run = json.loads(subprocess.check_output(['gh', 'api', f'repos/{repo}/actions/runs/{run_id}']))
+          expected = {'status': 'completed', 'conclusion': 'success', 'head_branch': 'master',
+                      'event': 'workflow_dispatch', 'path': '.github/workflows/build.yml'}
+          for key, value in expected.items():
+              if run.get(key) != value:
+                  raise SystemExit(f'Invalid build {key}: {run.get(key)!r}')
+          if run['head_repository']['full_name'] != repo:
+              raise SystemExit('Build must belong to this repository')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f"commit={run['head_sha']}\n")
+          PY
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.build.outputs.commit }}
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: llvm-static-*
+          path: dist
+          merge-multiple: true
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Verify packages and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SDK_RUN_ID: ${{ inputs.run_id }}
+          SDK_BUILD_COMMIT: ${{ steps.build.outputs.commit }}
+        run: python3 scripts/publish.py

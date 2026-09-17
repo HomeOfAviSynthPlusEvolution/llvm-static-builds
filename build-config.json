@@ -1,0 +1,14 @@
+{
+  "version": "23.1.1",
+  "revision": 1,
+  "source_sha256": "ebe9be46fe8756d58c5b198ffad0fa2a766257add81a4dc52179bfacc7888ee6",
+  "windows_toolset": "v145",
+  "macos_deployment_target": "15.0",
+  "xcode_version": "16.4",
+  "components": [
+    "core",
+    "orcjit",
+    "passes",
+    "nativecodegen"
+  ]
+}

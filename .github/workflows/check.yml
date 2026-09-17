@@ -1,0 +1,22 @@
+name: Check configuration
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Check Python and configuration
+        run: |
+          python -m compileall -q scripts
+          python -m unittest discover -s tests -v
