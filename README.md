@@ -6,15 +6,17 @@ Precompiled LLVM static SDKs for embedding LLVM in shared libraries. These packa
 
 | Platform | Native runner | Toolchain | Runtime / minimum OS |
 |---|---|---|---|
-| Windows x86 | `windows-2025-vs2026` | MSVC v145, x64 host tools | Release `/MD` |
-| Windows x64 | `windows-2025-vs2026` | MSVC v145 | Release `/MD` |
-| Windows ARM64 | `windows-11-vs2026-arm` | MSVC v145 | Release `/MD` |
+| Windows x86 | `windows-2025-vs2026` | clang-cl 23.1.1, x64 host tools | Release `/MD` |
+| Windows x64 | `windows-2025-vs2026` | clang-cl 23.1.1 | Release `/MD` |
+| Windows ARM64 | `windows-11-vs2026-arm` | clang-cl 23.1.1 | Release `/MD` |
 | macOS x64 | `macos-15-intel` | Xcode 16.4 | macOS 15.0 |
 | macOS ARM64 | `macos-15` | Xcode 16.4 | macOS 15.0 |
 
 `build-config.json` pins LLVM 23.1.1, the official source SHA-256, and SDK revision 1. Exact compiler and runner image versions are recorded in each package. Hosted runner updates can change the compiler patch version; increment the SDK revision when publishing a rebuilt package. The macOS deployment target is an explicit build baseline, not a claim of compatibility with older systems.
 
 Linux is not included: downstream distribution packages can declare their LLVM runtime dependency through the system package manager.
+
+Windows builds use the SHA-256-pinned official Clang 23.1.1 compiler with MSVC v145 headers/libraries and the Windows SDK. The compiler runs natively on x64 or ARM64; x86 uses an explicit i686 target.
 
 Windows x86 packages target modern Windows, not Windows XP. Their shared-library JIT smoke test runs as a 32-bit process on the x64 runner.
 

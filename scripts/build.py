@@ -34,7 +34,7 @@ def load_config():
 def package_name(config, system, arch):
     if system not in ("windows", "macos") or arch not in ("x86", "x64", "arm64") or (system == "macos" and arch == "x86"):
         raise ValueError("Unsupported SDK platform")
-    toolchain = (f"msvc-{config['windows_toolset']}-md" if system == "windows" else
+    toolchain = (f"clang-cl{config['windows_clang_version']}-{config['windows_toolset']}-md" if system == "windows" else
                  f"xcode{config['xcode_version']}-macos{config['macos_deployment_target']}")
     return f"llvm-{config['version']}-r{config['revision']}-{system}-{arch}-{toolchain}"
 
@@ -160,7 +160,10 @@ def main():
     cmake = os.environ.get("SDK_CMAKE", "cmake")
     platform_options = []
     if args.platform == "windows":
-        platform_options = ["-DCMAKE_C_COMPILER=cl", "-DCMAKE_CXX_COMPILER=cl",
+        compiler = Path(os.environ["SDK_CLANG_CL"]).as_posix()
+        triple = {"x86": "i686", "x64": "x86_64", "arm64": "aarch64"}[args.arch] + "-pc-windows-msvc"
+        platform_options = [f"-DCMAKE_C_COMPILER={compiler}", f"-DCMAKE_CXX_COMPILER={compiler}",
+                            f"-DCMAKE_C_COMPILER_TARGET={triple}", f"-DCMAKE_CXX_COMPILER_TARGET={triple}",
                             "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL",
                             "-DCMAKE_C_FLAGS=/utf-8", "-DCMAKE_CXX_FLAGS=/utf-8"]
     else:
@@ -178,6 +181,8 @@ def main():
                "-DLLVM_ENABLE_LIBXML2=OFF", "-DLLVM_ENABLE_CURL=OFF", "-DLLVM_ENABLE_HTTPLIB=OFF",
                "-DLLVM_ENABLE_LIBEDIT=OFF", "-DLLVM_ENABLE_FFI=OFF", "-DLLVM_ENABLE_DIA_SDK=OFF",
                "-DLLVM_ENABLE_Z3_SOLVER=OFF", f"-DPython3_EXECUTABLE={sys.executable}"]
+    if args.platform == "windows":
+        options.append(f"-DLLVM_HOST_TRIPLE={triple}")
     # Discover the complete static dependency closure from LLVM's own CMake targets.
     run([cmake, "-S", source, "-B", build, *options], logs / "configure.log")
     probe = work / "components"
@@ -236,6 +241,8 @@ def main():
         raise ValueError("Compiler pointer size does not match SDK architecture")
     compiler_version = re.search(r'set\(CMAKE_CXX_COMPILER_VERSION "([^"]+)"\)', compiler_info).group(1)
     compiler_id = re.search(r'set\(CMAKE_CXX_COMPILER_ID "([^"]+)"\)', compiler_info).group(1)
+    if args.platform == "windows" and (compiler_id != "Clang" or compiler_version != config["windows_clang_version"]):
+        raise ValueError("Unexpected Windows compiler: expected pinned clang-cl")
     manifest = {"name": name, "llvm_version": version, "sdk_revision": config["revision"],
                 "source_url": url, "source_sha256": config["source_sha256"],
                 "platform": args.platform, "architecture": args.arch, "configuration": "Release",

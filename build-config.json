@@ -10,5 +10,10 @@
     "orcjit",
     "passes",
     "nativecodegen"
-  ]
+  ],
+  "windows_clang_version": "23.1.1",
+  "windows_clang_sha256": {
+    "x64": "11af43ba261a1158090dd6f0da40d7a34f32dbfb4a76b43240bffa1ebb140984",
+    "arm64": "aeb4415a5fcfd488dc0ef69ccb2c85a81163c11960b63b6b295c6c3df5a6317e"
+  }
 }

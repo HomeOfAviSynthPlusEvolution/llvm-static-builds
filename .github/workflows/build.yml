@@ -37,6 +37,10 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: ./scripts/msvc-env.ps1
+      - name: Install pinned clang-cl
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/install-clang.ps1
       - name: Select Xcode
         if: runner.os == 'macOS'
         shell: bash

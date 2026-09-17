@@ -81,7 +81,7 @@ def main():
     notes = dist / "release-notes.md"
     notes.write_text(
         f"LLVM {config['version']} static SDK, packaging revision {config['revision']}.\n\n"
-        "- Windows x86, x64, and ARM64: Release, MSVC v145, dynamic CRT (`/MD`).\n"
+        f"- Windows x86, x64, and ARM64: clang-cl {config['windows_clang_version']}, MSVC v145 ABI, Release dynamic CRT (`/MD`).\n"
         f"- macOS x64 and ARM64: Xcode {config['xcode_version']}, deployment target {config['macos_deployment_target']}.\n"
         "- Static core, ORC JIT, optimization passes, native code generation, and their dependencies.\n"
         "- Relocated SDKs were used to build and execute a JIT inside a shared library.\n"
