@@ -71,7 +71,9 @@ def audit_sdk(sdk, forbidden_paths):
             text = path.read_text(encoding="utf-8").replace("\\", "/").lower()
             for old in forbidden_paths:
                 if str(old).replace("\\", "/").lower() in text:
-                    raise ValueError(f"Nonrelocatable path in {path}: {old}")
+                    matching_lines = [line.strip() for line in text.splitlines()
+                                      if str(old).replace("\\", "/").lower() in line]
+                    raise ValueError(f"Nonrelocatable path in {path}: {old}; lines: {matching_lines}")
 
 
 def check_dependencies(output, system):
@@ -177,6 +179,7 @@ def main():
                "-DLLVM_BUILD_LLVM_DYLIB=OFF", "-DLLVM_BUILD_LLVM_C_DYLIB=OFF", "-DLLVM_LINK_LLVM_DYLIB=OFF",
                "-DLLVM_INCLUDE_TESTS=OFF", "-DLLVM_INCLUDE_BENCHMARKS=OFF", "-DLLVM_INCLUDE_EXAMPLES=OFF",
                "-DLLVM_INCLUDE_DOCS=OFF", "-DLLVM_BUILD_TOOLS=OFF", "-DLLVM_INCLUDE_UTILS=OFF",
+               "-DLLVM_BUILD_UTILS=OFF", "-DLLVM_INSTALL_UTILS=OFF",
                "-DLLVM_ENABLE_ASSERTIONS=OFF", "-DLLVM_ENABLE_ZLIB=OFF", "-DLLVM_ENABLE_ZSTD=OFF",
                "-DLLVM_ENABLE_LIBXML2=OFF", "-DLLVM_ENABLE_CURL=OFF", "-DLLVM_ENABLE_HTTPLIB=OFF",
                "-DLLVM_ENABLE_LIBEDIT=OFF", "-DLLVM_ENABLE_FFI=OFF", "-DLLVM_ENABLE_DIA_SDK=OFF",
