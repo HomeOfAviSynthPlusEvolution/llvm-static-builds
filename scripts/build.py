@@ -51,7 +51,7 @@ def extract_source(archive, destination):
             parts = Path(member.name).parts
             if len(parts) < 2:
                 continue
-            if parts[1] not in ("llvm", "cmake", "third-party", "LICENSE.TXT"):
+            if parts[1] not in ("llvm", "libc", "cmake", "third-party", "LICENSE.TXT"):
                 continue
             if len(parts) > 2 and parts[1] == "llvm" and parts[2] in (
                     "test", "unittests", "benchmarks", "docs", "examples"):
